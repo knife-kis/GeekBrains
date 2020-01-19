@@ -15,6 +15,7 @@ public class ServerMain {
         Socket socket = null;
 
         try {
+            AuthService.connect();
             server = new ServerSocket(8189);
             System.out.println("Сервер запущен!");
 
@@ -22,7 +23,7 @@ public class ServerMain {
             while (true) {
                 socket = server.accept();
                 System.out.println("Клиент подключился ");
-                clients.add(new ClientHandler(this, socket));
+                new ClientHandler(this, socket);
             }
 
         } catch (IOException e) {
@@ -40,7 +41,12 @@ public class ServerMain {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            AuthService.disconnect();
         }
+    }
+
+    public void subscribe(ClientHandler clientHandler) {
+        clients.add(clientHandler);
     }
 
     public void broadcastMsg(String msg) {
@@ -49,8 +55,29 @@ public class ServerMain {
         }
     }
 
+    public void privatebroadcastMsg(String msg, String nickName){
+        for (ClientHandler t: clients){
+            if (t.getNick().equals(nickName))
+                t.sendMsg("ПC от " + msg);
+        }
+    }
+
+    public void errorMsg(ClientHandler clientHandler){
+        clientHandler.sendMsg("такого пользователя не существует" + clientHandler.getNick());
+    }
+
     public void deleteClient(ClientHandler i) {
         System.out.println("Клиент отключился ");
         clients.remove(i);
+    }
+
+    public boolean searchName(String nick) {
+        boolean check = false;
+        for (ClientHandler o: clients) {
+            if (o.getNick().equals(nick)){
+                check = true;
+            }
+        }
+        return check;
     }
 }
